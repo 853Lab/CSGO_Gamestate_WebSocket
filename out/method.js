@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Event = exports.RList = exports.snooze = void 0;
+exports.EventEmiter = exports.RList = exports.snooze = void 0;
 /** 异步打盹多少毫秒 */
 const snooze = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 exports.snooze = snooze;
@@ -18,48 +18,90 @@ class RList {
 }
 exports.RList = RList;
 /** Event触发 */
-class Event {
-    events;
-    constructor() {
-        this.events = Object.create(null);
-    }
-    // tslint:disable-next-line: ban-types
-    on(name, fn) {
-        if (!this.events[name]) {
-            this.events[name] = [];
+class EventEmiter {
+    static events = new Map();
+    static on(event, listener) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object") {
+            // @ts-ignore
+            this.events[event] = [];
         }
-        this.events[name].push(fn);
-        return this;
+        // @ts-ignore
+        this.events[event].push(listener);
+        return () => this.removeListener(event, listener);
     }
-    emit(name, ...args) {
-        if (!this.events[name]) {
-            return this;
+    static removeListener(event, listener) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        const idx = this.events[event].indexOf(listener);
+        if (idx > -1) {
+            // @ts-ignore
+            this.events[event].splice(idx, 1);
         }
-        const fns = this.events[name];
-        fns.forEach((fn) => fn.call(this, ...args));
-        return this;
     }
-    // tslint:disable-next-line: ban-types
-    off(name, fn) {
-        if (!this.events[name]) {
-            return this;
-        }
-        if (!fn) {
-            this.events[name] = null;
-            return this;
-        }
-        const index = this.events[name].indexOf(fn);
-        this.events[name].splice(index, 1);
-        return this;
+    static emit(event, ...args) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        this.events[event].forEach((listener) => listener.apply(this, args));
     }
-    // tslint:disable-next-line: ban-types
-    once(name, fn) {
-        const only = () => {
-            fn.apply(this, arguments);
-            this.off(name, only);
-        };
-        this.on(name, only);
-        return this;
+    static once(event, listener) {
+        const remove = this.on(event, (...args) => {
+            remove();
+            listener.apply(this, args);
+        });
+    }
+    static removeAllListeners(event) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        this.events[event] = [];
+    }
+    events = new Map();
+    on(event, listener) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object") {
+            // @ts-ignore
+            this.events[event] = [];
+        }
+        // @ts-ignore
+        this.events[event].push(listener);
+        return () => this.removeListener(event, listener);
+    }
+    removeListener(event, listener) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        const idx = this.events[event].indexOf(listener);
+        if (idx > -1) {
+            // @ts-ignore
+            this.events[event].splice(idx, 1);
+        }
+    }
+    emit(event, ...args) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        this.events[event].forEach((listener) => listener.apply(this, args));
+    }
+    once(event, listener) {
+        const remove = this.on(event, (...args) => {
+            remove();
+            listener.apply(this, args);
+        });
+    }
+    removeAllListeners(event) {
+        // @ts-ignore
+        if (typeof this.events[event] !== "object")
+            return;
+        // @ts-ignore
+        this.events[event] = [];
     }
 }
-exports.Event = Event;
+exports.EventEmiter = EventEmiter;

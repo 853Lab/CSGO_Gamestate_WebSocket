@@ -5,7 +5,7 @@ const http = require("http");
 const method_1 = require("./method");
 const ws_1 = require("ws");
 /** 建立监听CSGO发来的数据 */
-class ListenServer extends method_1.Event {
+class ListenServer extends method_1.EventEmiter {
     /** 域名或IP */
     host = '127.0.0.1';
     /** 端口 */

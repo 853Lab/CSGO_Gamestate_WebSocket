@@ -1,10 +1,10 @@
 
 import http = require('http')
-import { Event } from './method'
+import { EventEmiter } from './method'
 import { WebSocketServer } from 'ws'
 import { Data } from './data'
 /** 建立监听CSGO发来的数据 */
-export class ListenServer extends Event {
+export class ListenServer extends EventEmiter {
     /** 域名或IP */
     host = '127.0.0.1'
     /** 端口 */
